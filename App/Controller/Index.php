@@ -2,35 +2,52 @@
 
 namespace App\Controller;
 
-use App\Dao\User;
-use Framework\Pool\Context;
 use App\Service\User as UserService;
 use Framework\MVC\Controller;
-use Framework\Core\Log;
+use Framework\Coroutine\Coroutine;
 
 class Index extends Controller
 {
     public function index()
     {
-        $request = Context::getContext()->getRequest();
-        return 'i am index:' . json_encode($request->get);
+        return 'i am index:';
     }
 
-    public function tong()
+    public function coroutine()
     {
-        \Swoole\Runtime::enableCoroutine(true);
+        $s = microtime(true);
 
-        return 'i am tong'.json_encode($this->request->getRequestParam());
+        // 创建通道，用于协程返回值
+        $channel = Coroutine::createChannel(2);
+
+        // 创建协程1
+        Coroutine::create(function () use ($channel) {
+            \Swoole\Coroutine::sleep(2);
+            $channel->push(['pid1' => Coroutine::getId()]);
+        });
+
+        // 创建协程2
+        Coroutine::create(function () use ($channel) {
+            \Swoole\Coroutine::sleep(2);
+            $channel->push(['pid2' => Coroutine::getId()]);
+        });
+
+        // 获取协程返回值
+        $result = Coroutine::getCoResult($channel, 2);
+
+        $e = microtime(true);
+
+        return 'i am cor:' . ($e - $s) . '|' . json_encode($result);
     }
 
     public function user()
     {
 
-        if (empty($this->request->get['uid'])) {
+        if (empty($this->request->getRequestParam('uid'))) {
             throw new \Exception('uid 不能为空');
         }
 
-        $result = UserService::getInstance()->getUserInfoById($this->request->get['uid']);
+        $result = UserService::getInstance()->getUserInfoById($this->request->getRequestParam('uid'));
         return json_encode($result);
     }
 
@@ -39,5 +56,4 @@ class Index extends Controller
         $result = UserService::getInstance()->getUserInfoList();
         return json_encode($result);
     }
-
 }

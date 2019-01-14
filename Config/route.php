@@ -2,9 +2,8 @@
 
 return [
     'route' => function (FastRoute\RouteCollector $r) {
-        $r->addRoute('GET', '', 'Index@index');
-        $r->addRoute('GET', '/index/index', 'Index@index');
-        $r->addRoute('GET', '/index/tong', 'Index@tong');
-        $r->addRoute('GET', '/index/user', 'Index@user');
+        $r->addRoute('GET', '/index/corotine', 'Index@coroutine');
+
+        $r->addRoute('GET', '/index/generate', 'Index@generate');
     }
 ];

@@ -3,6 +3,7 @@
 namespace Framework\Coroutine;
 
 use Swoole\Coroutine as SwCo;
+use Swoole\Coroutine\Channel as Channel;
 
 class Coroutine
 {
@@ -70,6 +71,33 @@ class Coroutine
         return true;
     }
 
+    /**
+     * 创建协程通道
+     *
+     * @param $len
+     * @return SwCo\Channel
+     */
+    public static function createChannel($len)
+    {
+        $channel = new Channel($len);
+        return $channel;
+    }
+
+    /**
+     * 获取通道中所有结果
+     *
+     * @param Channel $channel
+     * @return array|mixed
+     */
+    public static function getCoResult(Channel $channel, $len)
+    {
+        $result = [];
+        for ($i = 0; $i < $len; $i++) {
+            $result += $channel->pop();
+        }
+        return $result;
+    }
+
     public static function create($cb, $deferCb = null)
     {
         $nid = self::getId();
@@ -89,14 +117,14 @@ class Coroutine
         });
     }
 
-    public static function call($cb, $args)
+    public static function call($cb, $args = [])
     {
         if (empty($cb)) {
             return null;
         }
 
         $ret = null;
-        if (\is_callable($cb) || (\is_string($cb) && \function_exists($cb))){
+        if (\is_callable($cb) || (\is_string($cb) && \function_exists($cb))) {
             $ret = $cb(...$args);
         } elseif (\is_array($cb)) {
             list($obj, $mhd) = $cb;
