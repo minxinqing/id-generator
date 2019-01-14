@@ -21,6 +21,9 @@ class Main
 
     public static $applicationPath;
 
+    private static $pidFile;
+    private static $swoolePid;
+
     private static function init()
     {
         Config::load();
@@ -40,15 +43,55 @@ class Main
 
         self::init();
 
+        self::$pidFile = self::$rootPath . DS . 'runtime' . DS . 'swoole.pid';
+        self::$swoolePid = is_file(self::$pidFile) ? file_get_contents(self::$pidFile) : 0;
+
+        $command = $_SERVER['argv'][1];
+
+        switch ($command) {
+            case 'start':
+                self::start();
+                break;
+            case 'reload':
+                self::reload();
+                break;
+            case 'restart':
+                self::restart();
+                break;
+            case 'stop':
+                self::stop();
+                break;
+            default:
+                echo 'action not defined';
+                break;
+        }
+    }
+
+    private static function start()
+    {
         $http = new \Swoole\Http\Server(Config::get('host'), Config::get('port'));
         $http->set([
             "worker_num" => Config::get('worker_num'),
             "daemonize" => Config::get('daemonize'),
         ]);
 
+        $http->on('start', function (\Swoole\Server $serv) {
+            file_put_contents(self::$pidFile, $serv->master_pid);
+            self::setProcessTitle('id-generator-master');
+        });
+
+        $http->on('managerStart', function (\Swoole\Server $serv) {
+            self::setProcessTitle('id-generator-manager');
+        });
+
         $http->on('workerStart', function (\Swoole\Http\Server $serv, int $workerId) {
             if (function_exists('opcache_reset')) {
                 \opcache_reset();
+            }
+            if ($serv->taskworker) {
+                self::setProcessTitle('id-generator-task');
+            } else {
+                self::setProcessTitle('id-generator-worker');
             }
 
             try {
@@ -92,7 +135,45 @@ class Main
             }
 
         });
+
+        $http->on('shutdown', function () {
+            unlink(self::$pidFile);
+        });
+
         $http->start();
+    }
+
+    public static function stop()
+    {
+        if (posix_kill(self::$swoolePid, SIGTERM)) {
+            echo "shutdown success\r\n";
+        } else {
+            echo "shutdown failed\r\n";
+        }
+    }
+
+    public static function reload()
+    {
+        if (posix_kill(self::$swoolePid, SIGUSR1)) {
+            echo "reload success\r\n";
+        } else {
+            echo "reload failed\r\n";
+        }
+    }
+
+    public static function restart()
+    {
+        self::stop();
+        self::start();
+    }
+
+    public static function setProcessTitle($title)
+    {
+        if (function_exists('cli_set_process_title')) {
+            @cli_set_process_title($title);
+        } elseif (function_exists('\swoole_set_process_name')) {
+            \swoole_set_process_name($title);
+        }
     }
 
 }

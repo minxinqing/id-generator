@@ -30,24 +30,37 @@ class Dao
     //主键字段名
     private $pkId;
 
-    public function __construct($entity)
+    public function __construct($entity, $dbTag = null)
     {
         $this->entity = $entity;
+        $entityRef = new \ReflectionClass($this->entity);
+        $this->table = $entityRef->getConstant('TABLE_NAME');
+        $this->pkId = $entityRef->getConstant('PK_ID');
+        $this->dbTag = $dbTag;
+    }
+
+    /**
+     * @return Mysql
+     * @throws \Exception
+     */
+    public function getDb()
+    {
         $coId = Coroutine::getId();
         if (empty($this->dbs[$coId])) {
             //不同协程不能复用mysql连接，所以通过协程id进行资源隔离
             //达到同一协程只用一个mysql连接，不同协程用不同的mysql连接
-            $this->dbs[$coId] = MysqlPool::getInstance()->get();
-            $entityRef = new \ReflectionClass($this->entity);
-            $this->table = $entityRef->getConstant('TABLE_NAME');
-            $this->pkId = $entityRef->getConstant('PK_ID');
+            if ($this->dbTag) {
+                $mysqlConfig = Config::get($this->dbTag);
+            } else {
+                $mysqlConfig = null;
+            }
+            $this->dbs[$coId] = MysqlPool::getInstance($mysqlConfig)->get();
             defer(function () {
                 //利用协程的defer特性，自动回收资源
                 $this->recycle();
             });
         }
-
-        $this->db = $this->dbs[$coId];
+        return $this->dbs[$coId];
     }
 
     /**
@@ -139,8 +152,9 @@ class Dao
         if ($limit) {
             $query .= " limit {$limit}";
         }
-        $query = "select sleep(5);";
-        return $this->db->query($query);
+
+$query = 'select sleep(5);';
+        return $this->getDb()->query($query);
     }
 
     /**
@@ -158,7 +172,7 @@ class Dao
             $query .= 'ON DUPLICATE KEY UPDATE ' . $onDuplicate;
         }
 
-        $result = $this->db->query($query);
+        $result = $this->getDb()->query($query);
         if (!empty($result['insert_id'])) {
             return $result['insert_id'];
         }
@@ -185,7 +199,7 @@ class Dao
         $strUpdateFields = rtrim($strUpdateFields, ',');
         $query = "UPDATE {$this->getLibName()} SET {$strUpdateFields} WHERE {$where}";
 
-        $result = $this->db->query($query);
+        $result = $this->getDb()->query($query);
         return $result['affected_rows'];
     }
 
@@ -202,7 +216,7 @@ class Dao
         }
 
         $query = "DELETE FROM {$this->getLibName()} WHERE {$where}";
-        $result = $this->db->query($query);
+        $result = $this->getDb()->query($query);
         return $result['affected_rows'];
     }
 }
