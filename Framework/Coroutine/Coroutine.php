@@ -95,6 +95,7 @@ class Coroutine
         for ($i = 0; $i < $len; $i++) {
             $result += $channel->pop();
         }
+        $channel->close();
         return $result;
     }
 
