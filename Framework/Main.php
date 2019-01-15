@@ -102,7 +102,6 @@ class Main
                 $mysqlConfig = Config::get('mysql');
                 if (!empty($mysqlConfig)) {
                     Pool\Mysql::getInstance($mysqlConfig);
-                    Log::info('初始化连接池');
                 }
             } catch (\Throwable $e) {
                 Log::emergency($e->getMessage(), $e->getTrace());
