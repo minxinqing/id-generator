@@ -5,12 +5,13 @@ namespace Framework;
 use Framework\Core\{
     Route,
     Config,
-    Log
+    Log,
+    Lock,
+    Table
 };
 use Framework\Coroutine\Context;
 use Framework\Coroutine\Coroutine;
 use Framework\Pool;
-use Swoole;
 
 class Main
 {
@@ -24,11 +25,16 @@ class Main
     private static $pidFile;
     private static $swoolePid;
 
+    public static $table;
+    public static $lock;
+
     private static function init()
     {
         Config::load();
         Log::init();
         Route::init();
+        Lock::init(16);
+        Table::init(16);
     }
 
     final public static function run()
@@ -69,11 +75,9 @@ class Main
 
     private static function start()
     {
-        $http = new \Swoole\Http\Server(Config::get('host'), Config::get('port'));
-        $http->set([
-            "worker_num" => Config::get('worker_num'),
-            "daemonize" => Config::get('daemonize'),
-        ]);
+        $swooleConfig = Config::get('swoole');
+        $http = new \Swoole\Http\Server($swooleConfig['host'], $swooleConfig['port']);
+        $http->set($swooleConfig);
 
         $http->on('start', function (\Swoole\Server $serv) {
             file_put_contents(self::$pidFile, $serv->master_pid);

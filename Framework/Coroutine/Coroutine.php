@@ -99,6 +99,13 @@ class Coroutine
         return $result;
     }
 
+    /**
+     * 创建协程
+     *
+     * @param $cb
+     * @param null $deferCb
+     * @return mixed
+     */
     public static function create($cb, $deferCb = null)
     {
         $nid = self::getId();

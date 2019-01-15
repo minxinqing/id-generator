@@ -2,9 +2,10 @@
 
 namespace App\Controller;
 
-use App\Service\User as UserService;
 use Framework\MVC\Controller;
 use Framework\Coroutine\Coroutine;
+use App\Service\User as UserService;
+use App\Service\Snowflake as SnowflakeService;
 
 class Index extends Controller
 {
@@ -55,5 +56,11 @@ class Index extends Controller
     {
         $result = UserService::getInstance()->getUserInfoList();
         return json_encode($result);
+    }
+
+    public function generate()
+    {
+        $id = SnowflakeService::getInstance()->generateId();
+        return $this->apiSucc($id);
     }
 }

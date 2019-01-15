@@ -1,11 +1,13 @@
 <?php
 
 return [
-    'host' => '0.0.0.0',
-    'port' => 8077,
-    'worker_num' => 1,
-    'daemonize' => 1,
-
+    'swoole' => [
+        'host' => '0.0.0.0',
+        'port' => 8077,
+        'worker_num' => 4,
+        'daemonize' => 0,
+        'max_request' => 100000,
+    ],
     'mysql' => [
         'pool_size' => 3,     //连接池大小
         'pool_get_timeout' => 3, //当在此时间内未获得到一个连接，会立即返回。（表示所以的连接都已在使用中）
@@ -20,4 +22,8 @@ return [
             'strict_type' => true,  //ture，会自动表数字转为int类型
         ],
     ],
+    'snowflake' => [
+        'index' => 1,
+        'offset' => 2,
+    ]
 ];
