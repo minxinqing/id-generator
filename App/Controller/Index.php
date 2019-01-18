@@ -60,7 +60,9 @@ class Index extends Controller
 
     public function generate()
     {
-        $id = SnowflakeService::getInstance()->generateId();
+        $itemIndex = $this->request->getRequestParam('item');
+        $itemIndex || $itemIndex = 1;
+        $id = SnowflakeService::getInstance()->generateId($itemIndex);
         return $this->apiSucc($id);
     }
 }

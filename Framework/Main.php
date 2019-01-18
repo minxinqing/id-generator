@@ -33,8 +33,8 @@ class Main
         Config::load();
         Log::init();
         Route::init();
-        Lock::init(16);
-        Table::init(16);
+        Lock::init(64);
+        Table::init(64);
     }
 
     final public static function run()
@@ -142,16 +142,30 @@ class Main
         $http->on('shutdown', function () {
             unlink(self::$pidFile);
         });
-
         $http->start();
     }
 
     public static function stop()
     {
-        if (posix_kill(self::$swoolePid, SIGTERM)) {
-            echo "shutdown success\r\n";
-        } else {
-            echo "shutdown failed\r\n";
+        if (self::killProcess(self::$swoolePid, 0)) {
+            if (self::killProcess(self::$swoolePid, SIGTERM)) {
+
+                $time = 1;
+                while (self::killProcess(self::$swoolePid, 0)) {
+                    if ($time > 10) {
+                        echo "PID[".self::$swoolePid."] cannot be stopped gracefully.\r\n";
+                        return 1;
+                    }
+                    echo "Waiting PID[".self::$swoolePid."] to stop. \r\n";
+                    sleep(1);
+                    $time++;
+                }
+                if (file_exists(self::$pidFile)) {
+                    unlink(self::$pidFile);
+                }
+
+                echo "shutdown success\r\n";
+            }
         }
     }
 
@@ -161,6 +175,15 @@ class Main
             echo "reload success\r\n";
         } else {
             echo "reload failed\r\n";
+        }
+    }
+
+    protected static function killProcess($pid, $sig)
+    {
+        try {
+            return \swoole_process::kill($pid, $sig);
+        } catch (\Exception $e) {
+            return false;
         }
     }
 

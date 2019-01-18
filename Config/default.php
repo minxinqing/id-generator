@@ -5,7 +5,7 @@ return [
         'host' => '0.0.0.0',
         'port' => 8077,
         'worker_num' => 4,
-        'daemonize' => 0,
+        'daemonize' => 1,
         'max_request' => 100000,
     ],
     'mysql' => [
@@ -23,7 +23,7 @@ return [
 //        ],
     ],
     'snowflake' => [
-        'index' => 1,
-        'offset' => 2,
+        'node' => 1,
+        'item_num' => 64,
     ]
 ];
