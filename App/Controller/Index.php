@@ -65,4 +65,12 @@ class Index extends Controller
         $id = SnowflakeService::getInstance()->generateId($itemIndex);
         return $this->apiSucc($id);
     }
+
+    public function reversionId()
+    {
+        $id = $this->request->getRequestParam('id');
+        $info = SnowflakeService::getInstance()->reversion($id);
+
+        return $this->apiSucc($info);
+    }
 }

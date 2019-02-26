@@ -35,7 +35,7 @@ class Snowflake
     public function __construct()
     {
         $this->nodeIndex = Config::get('snowflake')['node'];
-        if ($this->nodeIndex < 0 || $this->nodeIndex > self::NODE_MAX) {
+        if ($this->nodeIndex <= 0 || $this->nodeIndex > self::NODE_MAX) {
             throw new Exception('节点编号超出取值范围');
         }
     }
@@ -75,9 +75,9 @@ class Snowflake
      * 生成ID
      * @return int
      */
-    public function generateId($itemIndex)
+    public function generateId(int $itemIndex)
     {
-        if ($itemIndex < 0 || $itemIndex > self::ITEM_MAX) {
+        if ($itemIndex <= 0 || $itemIndex > self::ITEM_MAX) {
             throw new Exception('项目编号超出取值范围');
         }
         $this->lock($itemIndex);
@@ -103,6 +103,21 @@ class Snowflake
         $this->unlock($itemIndex);
 
         $id = (($now - self::EPOCH) << self::TIME_SHIFT) | ($this->nodeIndex << self::NODE_SHIFT) | ($itemIndex << self::ITEM_SHIFT) | $this->sequence;
+        Log::info(json_encode([
+            $id,
+            $now,
+            self::EPOCH,
+            self::TIME_SHIFT,
+            ($now - self::EPOCH) << self::TIME_SHIFT,
+            $this->nodeIndex,
+            self::NODE_SHIFT,
+            $this->nodeIndex << self::NODE_SHIFT,
+            $itemIndex,
+            self::ITEM_SHIFT,
+            $itemIndex << self::ITEM_SHIFT,
+            $this->sequence
+        ]));
+
         return $id;
     }
 
@@ -114,5 +129,25 @@ class Snowflake
     {
         return sprintf("%.0f", microtime(true) * 1000);
 
+    }
+
+    /**
+     * 反解ID中的各部分
+     *
+     * @param $id
+     * @return array
+     */
+    public function reversion($id)
+    {
+        $str = decbin($id);
+        $len = strlen($str);
+
+        $info = [];
+        $info['timestamp'] = bindec(substr($str, 0, $len - self::TIME_SHIFT));
+        $info['node'] = bindec(substr($str, -self::TIME_SHIFT, self::NODE_BITS));
+        $info['item'] = bindec(substr($str, -self::NODE_SHIFT, self::ITEM_BITS));
+        $info['sequence'] = bindec(substr($str, -self::ITEM_SHIFT, self::SEQUENCE_BITS));
+
+        return $info;
     }
 }
