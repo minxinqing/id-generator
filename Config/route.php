@@ -5,6 +5,6 @@ return [
         $r->addRoute('GET', '/index/corotine', 'Index@coroutine');
 
         $r->addRoute('GET', '/index/generate', 'Index@generate');
-        $r->addRoute('POST', '/index/reversion-id', 'Index@reversionId');
+        $r->addRoute('POST', '/index/revert-id', 'Index@revertId');
     }
 ];

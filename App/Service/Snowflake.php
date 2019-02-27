@@ -137,7 +137,7 @@ class Snowflake
      * @param $id
      * @return array
      */
-    public function reversion($id)
+    public function revert($id)
     {
         $str = decbin($id);
         $len = strlen($str);

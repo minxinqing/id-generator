@@ -66,10 +66,10 @@ class Index extends Controller
         return $this->apiSucc($id);
     }
 
-    public function reversionId()
+    public function revertId()
     {
         $id = $this->request->getRequestParam('id');
-        $info = SnowflakeService::getInstance()->reversion($id);
+        $info = SnowflakeService::getInstance()->revert($id);
 
         return $this->apiSucc($info);
     }
