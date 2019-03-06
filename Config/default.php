@@ -24,6 +24,5 @@ return [
     ],
     'snowflake' => [
         'node' => 1,
-        'item_num' => 64,
     ]
 ];
