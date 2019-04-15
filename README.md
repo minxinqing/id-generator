@@ -28,4 +28,4 @@
 `
 
 ## License
-[MIT]https://github.com/minxinqing/id-generator/blob/master/LICENSE
+[MIT](https://github.com/minxinqing/id-generator/blob/master/LICENSE)
