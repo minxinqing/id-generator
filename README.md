@@ -26,3 +26,6 @@
 	"data": 410207999161012224
 }
 `
+
+## License
+[MIT]https://github.com/minxinqing/id-generator/blob/master/LICENSE
