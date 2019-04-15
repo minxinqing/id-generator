@@ -27,3 +27,6 @@
 }
 `
 
+## License
+
+[MIT](https://github.com/hhxsv5/laravel-s/blob/master/LICENSE)
